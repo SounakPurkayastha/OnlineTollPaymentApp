@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Instascan</title>
+    <script type="text/javascript" src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js" ></script>	
+    <style type="text/css">
+        #preview {
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+        }
+    </style>
+  </head>
+  <body>
+    <video id="preview" height="500" width="1000"></video>
+    <script>
+        var code;
+        let scanner = new Instascan.Scanner(
+            {
+                video: document.getElementById('preview')
+            }
+        );
+        var vehicleId = "WB231536";
+        scanner.addListener('scan', function(content) {
+            fetch('http://ec2-18-224-227-221.us-east-2.compute.amazonaws.com/find/' + vehicleId).then(response => {
+                return response.json();
+            }).then(responseData => {
+                code = responseData.qrcode;
+                if(code === content)
+                    alert('QR code verified');
+                else
+                    alert('Wrong QR code');
+            });
+        });
+        Instascan.Camera.getCameras().then(cameras => 
+        {
+            if(cameras.length > 0){
+                scanner.start(cameras[0]);
+            } else {
+                console.error("Não existe câmera no dispositivo!");
+            }
+        });
+    </script>
+ </body>
+</html>

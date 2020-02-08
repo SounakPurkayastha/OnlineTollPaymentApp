@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">My Application</string>
+    <string-array name="spinner_items">
+        <item>Vehicle Class</item>
+        <item>Car/Jeep/Van</item>
+        <item>LCV</item>
+        <item>2 Axle Bus/Truck</item>
+        <item>3 Axle Bus/Truck</item>
+        <item>4/5/6 Axle Bus/Truck</item>
+        <item>7 Axle Bus/Truck</item>
+        <item>Heavy Vehicle</item>
+    </string-array>
+    <string name="title_activity_maps">Map</string>
+    <string name="title_activity_destination">Map</string>
+    <string name="google_maps_key">AIzaSyANluW8Q1hLQPUZwKYhEnc5Q0mSYbT-HjQ</string>
+    <string name="title_activity_maps2">Map</string>
+</resources>
