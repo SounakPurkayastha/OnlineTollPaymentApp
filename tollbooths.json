@@ -31,4 +31,20 @@
 		"upi_id": "834309@paytm"
 	}
 	]
+	{
+		"latitude": 29.877001,
+		"longitude": 95.359675,
+		"name": "Abon Da'r Dukan",
+		"amounts": {
+				"Car/Jeep/Van": 1,
+				"LCV": 2,
+				"2 Axle Bus/Truck": 3,
+				"3 Axle Bus/Truck": 4,
+				"4/5/6 Axle Bus/Truck": 5,
+        			"7 Axle Bus/Truck": 6,
+				"Heavy Vehicle": 7
+		},
+		"upi_id": "834309@paytm"
+	}
+	]
 }
