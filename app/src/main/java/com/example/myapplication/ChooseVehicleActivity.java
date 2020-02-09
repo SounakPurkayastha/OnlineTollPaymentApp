@@ -26,7 +26,7 @@ import java.util.ArrayList;
 public class ChooseVehicleActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
-    private ArrayList<Model> vehicleData;
+    //private ArrayList<Model> vehicleData;
     private ChooseVehicleActivityAdapter adapter;
     String userId;
     static String vehicleType;
@@ -41,14 +41,28 @@ public class ChooseVehicleActivity extends AppCompatActivity {
 
         recyclerView = findViewById(R.id.recycler);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        vehicleData = new ArrayList<>();
-        userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        dbRef = FirebaseDatabase.getInstance().getReference().child(userId).child("Vehicle");
-        dbRef.addListenerForSingleValueEvent(valueEventListener);
+        //vehicleData = new ArrayList<>();
+        //userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        //dbRef = FirebaseDatabase.getInstance().getReference().child(userId).child("Vehicle");
+        //dbRef.addListenerForSingleValueEvent(valueEventListener);
+        adapter = new ChooseVehicleActivityAdapter(HomeActivity.vehicles);
+        recyclerView.setAdapter(adapter);
+        adapter.setOnItemClickListener(new ChooseVehicleActivityAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                Model m = HomeActivity.vehicles.get(position);
+                vehicleType = m.getVehicleType();
+                vehicleId = m.getVehicleId();
+                startActivity(new Intent(ChooseVehicleActivity.this,PaymentActivity.class));
+            }
+        });
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(), DividerItemDecoration.VERTICAL);
+        dividerItemDecoration.setDrawable(ContextCompat.getDrawable(ChooseVehicleActivity.this, R.drawable.divider));
+        recyclerView.addItemDecoration(dividerItemDecoration);
         Toast.makeText(ChooseVehicleActivity.this,"Please choose current vehicle",Toast.LENGTH_SHORT).show();
     }
 
-    ValueEventListener valueEventListener = new ValueEventListener() {
+    /*ValueEventListener valueEventListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
             for(DataSnapshot dataSnapshot1:dataSnapshot.getChildren()) {
@@ -75,7 +89,7 @@ public class ChooseVehicleActivity extends AppCompatActivity {
         public void onCancelled(@NonNull DatabaseError databaseError) {
 
         }
-    };
+    };*/
 
     @Override
     public void onBackPressed() {

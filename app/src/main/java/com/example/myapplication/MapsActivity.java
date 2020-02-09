@@ -162,7 +162,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void notify(NotificationCompat.Builder builder) {
-        Intent intent = new Intent(MapsActivity.this, PaymentActivity.class);
+        Intent intent = new Intent(MapsActivity.this, LoadingActivity.class).putExtra("Activity",4);
         PendingIntent pendingIntent = PendingIntent.getActivity(MapsActivity.this,0,intent,PendingIntent.FLAG_CANCEL_CURRENT);
         builder.setContentIntent(pendingIntent);
         NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);

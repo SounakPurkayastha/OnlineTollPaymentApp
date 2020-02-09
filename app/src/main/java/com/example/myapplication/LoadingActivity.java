@@ -67,6 +67,7 @@ public class LoadingActivity extends AppCompatActivity implements InternetConnec
             HomeActivity.reference2.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    HomeActivity.vehicles.clear();
                     for(DataSnapshot dataSnapshot1 : dataSnapshot.getChildren()) {
                         HomeActivity.vehicles.add(dataSnapshot1.getValue(Model.class));
                     }
@@ -122,6 +123,23 @@ public class LoadingActivity extends AppCompatActivity implements InternetConnec
             jsonPlaceHolderApi = retrofit.create(JsonPlaceHolderApi.class);
             reference = FirebaseDatabase.getInstance().getReference().child(HomeActivity.userId).child("QRCode");
             getQRCode();
+        }
+        if(i == 4) {
+            HomeActivity.reference2.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    HomeActivity.vehicles.clear();
+                    for(DataSnapshot dataSnapshot1 : dataSnapshot.getChildren()) {
+                        HomeActivity.vehicles.add(dataSnapshot1.getValue(Model.class));
+                    }
+                    startActivity(new Intent(LoadingActivity.this,ChooseVehicleActivity.class));
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
         }
     }
 

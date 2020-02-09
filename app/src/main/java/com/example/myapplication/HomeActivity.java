@@ -124,8 +124,8 @@ public class HomeActivity extends AppCompatActivity implements InternetConnectiv
             InternetAvailabilityChecker.init(this);
             mInternetAvailabilityChecker = InternetAvailabilityChecker.getInstance();
             mInternetAvailabilityChecker.addInternetConnectivityListener(this);
+            vehicles = new ArrayList<>();
         }
-        vehicles = new ArrayList<>();
         userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         reference = FirebaseDatabase.getInstance().getReference().child(userId).child("QRCode");
         reference2 = FirebaseDatabase.getInstance().getReference().child(userId).child("Vehicle");
@@ -308,7 +308,7 @@ public class HomeActivity extends AppCompatActivity implements InternetConnectiv
     }
 
     public void notify(NotificationCompat.Builder builder) {
-        Intent intent = new Intent(HomeActivity.this, ChooseVehicleActivity.class);
+        Intent intent = new Intent(HomeActivity.this, LoadingActivity.class).putExtra("Activity",4);
         PendingIntent pendingIntent = PendingIntent.getActivity(HomeActivity.this,0,intent,PendingIntent.FLAG_CANCEL_CURRENT);
         builder.setContentIntent(pendingIntent);
         NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);

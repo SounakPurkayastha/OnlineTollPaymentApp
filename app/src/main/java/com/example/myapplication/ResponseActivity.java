@@ -118,7 +118,7 @@ public class ResponseActivity extends AppCompatActivity {
                 call.enqueue(new Callback<Void>() {
                     @Override
                     public void onResponse(Call<Void> call, Response<Void> response) {
-                        startActivity(new Intent(ResponseActivity.this,HomeActivity.class));
+                        startActivity(new Intent(ResponseActivity.this,NoCodeActivity.class));
                     }
 
                     @Override
