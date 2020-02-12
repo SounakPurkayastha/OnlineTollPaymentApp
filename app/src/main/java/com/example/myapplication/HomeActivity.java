@@ -18,6 +18,7 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -52,46 +53,43 @@ import java.util.Arrays;
 
 public class HomeActivity extends AppCompatActivity implements InternetConnectivityListener {
 
-    ListView listView;
     ArrayList<String> titles = new ArrayList<>(Arrays.asList("Registered Vehicles",
-                        "Payment History",
-                        "Show Map",
-                        "QR Code Receipt",
-                        "Logout"));
+            "Payment History",
+            "Show Map",
+            "QR Code Receipt",
+            "Logout"));
     ArrayList<String> descriptions = new ArrayList<>(Arrays.asList("List of all registered vehicles",
-                                "Details of all payments made so far",
-                                "Map showing your current location",
-                                "QR code for payment made",
-                                "Log out of app"));
-
-    //boolean vehiclesLoaded, qrcodeLoaded, boothsLoaded;
-    static String qrcode;
+            "Details of all payments made so far",
+            "Map showing your current location",
+            "QR code for payment made",
+            "Log out of app"));
+    ArrayList<Integer> images = new ArrayList<>(Arrays.asList(R.mipmap.ic_launcher,
+                                                              R.mipmap.ic_launcher,
+                                                              R.mipmap.ic_launcher,
+                                                              R.mipmap.ic_launcher,
+                                                              R.mipmap.ic_launcher));
+    ListView listView;
     static ArrayList<Model> vehicles;
     JsonObjectRequest request;
     RequestQueue requestQueue;
     static JSONArray jsonArray;
-
     static DatabaseReference reference2;
-
-    ArrayList<Integer> images = new ArrayList<>(Arrays.asList(R.mipmap.ic_launcher, R.mipmap.ic_launcher, R.mipmap.ic_launcher, R.mipmap.ic_launcher, R.mipmap.ic_launcher));
     long backPressedTime;
     LocationManager locationManager;
     LocationListener locationListener;
-    static ArrayList<TollBooth> tollBooths = new ArrayList<>();
+    static ArrayList<TollBooth> tollBooths;
     static float[] results;
     static boolean notificationShown = false;
     boolean permissionAsked = false;
     FusedLocationProviderClient fusedLocationProviderClient;
     static TollBooth nearestTollBooth = null;
     InternetAvailabilityChecker mInternetAvailabilityChecker;
-    //SharedPreferences sharedPreferences;
-    //static JsonObjectRequest request;
     static boolean tollBoothsLoaded = false;
     JSONObject object;
     static String userId;
     static DatabaseReference reference;
-    static boolean paymentComplete = false;
     LVAdapter adapter;
+    static String qrcode;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -116,43 +114,61 @@ public class HomeActivity extends AppCompatActivity implements InternetConnectiv
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-        //reference = FirebaseDatabase.getInstance().getReference().child(userId).child("QRCode");
-        //requestQueue = Volley.newRequestQueue(HomeActivity.this);
         if(Flag.firstLoad) {
-            //Toast.makeText(HomeActivity.this,"Checking for QR codes",Toast.LENGTH_SHORT).show();
+            //Toast.makeText(HomeActivity.this,"First load",Toast.LENGTH_SHORT).show();
             Flag.firstLoad = false;
             InternetAvailabilityChecker.init(this);
             mInternetAvailabilityChecker = InternetAvailabilityChecker.getInstance();
             mInternetAvailabilityChecker.addInternetConnectivityListener(this);
+            tollBooths = new ArrayList<>();
             vehicles = new ArrayList<>();
+            String url = "https://sounakpurkayastha.github.io/OnlineTollPaymentApp/tollbooths.json";
+            request = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+                @Override
+                public void onResponse(JSONObject response) {
+                    try {
+                        jsonArray = response.getJSONArray("tollBooths");
+                        double latitude;
+                        double longitude;
+                        String name;
+                        for(int i = 0; i < jsonArray.length(); i++) {
+                            try {
+                                object = jsonArray.getJSONObject(i);
+                                latitude = object.getDouble("latitude");
+                                longitude = object.getDouble("longitude");
+                                name = object.getString("name");
+                                tollBooths.add(new TollBooth(new LatLng(latitude,longitude),name));
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        results = new float[tollBooths.size()];
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    error.printStackTrace();
+                }
+            });
+            requestQueue = Volley.newRequestQueue(HomeActivity.this);
+            if(checkConnection())
+                requestQueue.add(request);
         }
         userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         reference = FirebaseDatabase.getInstance().getReference().child(userId).child("QRCode");
         reference2 = FirebaseDatabase.getInstance().getReference().child(userId).child("Vehicle");
-        //initialConnection = false;
-        //sharedPreferences = getSharedPreferences("com.example.myapplication",Context.MODE_PRIVATE);
-        //sharedPreferences.edit().putBoolean("paymentComplete",true).apply();
-
-        /*if(sharedPreferences.getBoolean("paymentComplete",false)) {
-            titles.add("QR Code Receipts");
-            descriptions.add("QR codes for payments made");
-            images.add(R.mipmap.ic_launcher);
-        }*/
-
-
         listView = findViewById(R.id.list_view);
         adapter = new LVAdapter(this,titles,descriptions,images);
         listView.setAdapter(adapter);
-
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-
                 if (i == 0) {
                     if (!checkConnection())
                         Toast.makeText(HomeActivity.this, "No internet connection", Toast.LENGTH_SHORT).show();
-                    //else if(!vehiclesLoaded)
-                    //    Toast.makeText(HomeActivity.this,"Fetching vehicles, please wait",Toast.LENGTH_SHORT).show();
                     else
                         startActivity(new Intent(HomeActivity.this, LoadingActivity.class).putExtra("Activity",0));
                 }
@@ -167,17 +183,16 @@ public class HomeActivity extends AppCompatActivity implements InternetConnectiv
                     if (!service.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                         Toast.makeText(HomeActivity.this, "Please enable Location", Toast.LENGTH_SHORT).show();
                     }
-                    //else if(!tollBoothsLoaded)
-                    //    Toast.makeText(HomeActivity.this,"Fetching toll booths, please wait",Toast.LENGTH_SHORT).show();
                     else {
-                        startActivity(new Intent(HomeActivity.this, LoadingActivity.class).putExtra("Activity",2));
+                        if(!checkConnection()) {
+                            startActivity(new Intent(HomeActivity.this, MapsActivity.class));
+                        }
+                        else
+                            startActivity(new Intent(HomeActivity.this, LoadingActivity.class).putExtra("Activity",2));
                     }
                 }
                 if (i == 3) {
-                    //if(!qrcodeLoaded)
-                    //    Toast.makeText(HomeActivity.this,"Fetching QR code, please wait",Toast.LENGTH_SHORT).show();
-                    //else
-                        startActivity(new Intent(HomeActivity.this, LoadingActivity.class).putExtra("Activity",3));
+                    startActivity(new Intent(HomeActivity.this, LoadingActivity.class).putExtra("Activity",3));
                 }
                 if (i == 4) {
                     if (!checkConnection())
@@ -207,7 +222,6 @@ public class HomeActivity extends AppCompatActivity implements InternetConnectiv
                     if(results[0] < 10000 && !notificationShown) {
                         HomeActivity.this.notify(builder);
                         nearestTollBooth = tollBooth;
-                        //notificationLocation = userLocation;
                         notificationShown = true;
                     }
                 }
@@ -237,61 +251,9 @@ public class HomeActivity extends AppCompatActivity implements InternetConnectiv
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
             }
             fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(HomeActivity.this);
-            //fetchLastLocation(builder);
         }
 
-        String url = "https://sounakpurkayastha.github.io/OnlineTollPaymentApp/tollbooths.json";
-        request = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                try {
-                    jsonArray = response.getJSONArray("tollBooths");
-                    double latitude;
-                    double longitude;
-                    String name;
-                    for(int i = 0; i < jsonArray.length(); i++) {
-                        try {
-                            object = jsonArray.getJSONObject(i);
-                            latitude = object.getDouble("latitude");
-                            longitude = object.getDouble("longitude");
-                            name = object.getString("name");
-                            tollBooths.add(new TollBooth(new LatLng(latitude,longitude),name));
-                        } catch (JSONException e) {
-                            Toast.makeText(HomeActivity.this,"Internet connection not found",Toast.LENGTH_SHORT).show();
-                            e.printStackTrace();
-                        }
-                    }
-                    results = new float[tollBooths.size()];
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                error.printStackTrace();
-            }
-        });
-        requestQueue = Volley.newRequestQueue(HomeActivity.this);
-        requestQueue.add(request);
-        //new Thread2().run();
-        //new Thread3().run();
-
     }
-
-    /*private void fetchLastLocation(final NotificationCompat.Builder builder) {
-        Task<Location> task = fusedLocationProviderClient.getLastLocation();
-        task.addOnSuccessListener(new OnSuccessListener<Location>() {
-            @Override
-            public void onSuccess(Location location) {
-                if(location != null) {
-                    currentLocation = location;
-                }
-                if(location == null)
-                    fetchLastLocation(builder);
-            }
-        });
-    }*/
 
     @Override
     public void onBackPressed() {
@@ -319,75 +281,13 @@ public class HomeActivity extends AppCompatActivity implements InternetConnectiv
 
     @Override
     public void onInternetConnectivityChanged(boolean isConnected) {
-        /*if(isConnected && !tollBoothsLoaded){
+        if(isConnected && !tollBoothsLoaded){
             tollBoothsLoaded = true;
-            //requestQueue.add(request);
+            requestQueue.add(request);
         }
         else if (!isConnected){
             Toast.makeText(HomeActivity.this,"No internet connection",Toast.LENGTH_SHORT).show();
-        }*/
+        }
     }
-
-    /*class Thread1 implements Runnable {
-
-        @Override
-        public void run() {
-            reference.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    if(!(dataSnapshot.getChildrenCount() == 0)) {
-                        for (DataSnapshot dataSnapshot1 : dataSnapshot.getChildren()) {
-                            qrcode = dataSnapshot1.getValue(String.class);
-                        }
-                    }
-                    qrcodeLoaded = true;
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                }
-            });
-        }
-    }*/
-
-    /*class Thread3 implements Runnable {
-        @Override
-        public void run() {
-            String url = "https://sounakpurkayastha.github.io/OnlineTollPaymentApp/tollbooths.json";
-            request = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
-                @Override
-                public void onResponse(JSONObject response) {
-                    try {
-                        jsonArray = response.getJSONArray("tollBooths");
-                        double latitude;
-                        double longitude;
-                        String name;
-                        for(int i = 0; i < jsonArray.length(); i++) {
-                            try {
-                                object = jsonArray.getJSONObject(i);
-                                latitude = object.getDouble("latitude");
-                                longitude = object.getDouble("longitude");
-                                name = object.getString("name");
-                                tollBooths.add(new TollBooth(new LatLng(latitude,longitude),name));
-                            } catch (JSONException e) {
-                                Toast.makeText(HomeActivity.this,"Internet connection not found",Toast.LENGTH_SHORT).show();
-                                e.printStackTrace();
-                            }
-                        }
-                        results = new float[tollBooths.size()];
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    error.printStackTrace();
-                }
-            });
-            boothsLoaded = true;
-        }
-    }*/
 
 }

@@ -19,11 +19,14 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.gson.JsonArray;
 import com.treebo.internetavailabilitychecker.InternetAvailabilityChecker;
 import com.treebo.internetavailabilitychecker.InternetConnectivityListener;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -81,41 +84,42 @@ public class LoadingActivity extends AppCompatActivity implements InternetConnec
             });
         }
         if(i == 2) {
-            String url = "https://sounakpurkayastha.github.io/OnlineTollPaymentApp/tollbooths.json";
-            request = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
-                @Override
-                public void onResponse(JSONObject response) {
-                    try {
-                        HomeActivity.jsonArray = response.getJSONArray("tollBooths");
-                        double latitude;
-                        double longitude;
-                        String name;
-                        for(int i = 0; i < HomeActivity.jsonArray.length(); i++) {
-                            try {
-                                JSONObject object = HomeActivity.jsonArray.getJSONObject(i);
-                                latitude = object.getDouble("latitude");
-                                longitude = object.getDouble("longitude");
-                                name = object.getString("name");
-                                HomeActivity.tollBooths.add(new TollBooth(new LatLng(latitude,longitude),name));
-                            } catch (JSONException e) {
-                                Toast.makeText(LoadingActivity.this,"Internet connection not found",Toast.LENGTH_SHORT).show();
-                                e.printStackTrace();
+                MapsActivity.tollBooths = new ArrayList<>();
+                String url = "https://sounakpurkayastha.github.io/OnlineTollPaymentApp/tollbooths.json";
+                request = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            MapsActivity.jsonArray = response.getJSONArray("tollBooths");
+                            double latitude;
+                            double longitude;
+                            String name;
+                            for (int i = 0; i < MapsActivity.jsonArray.length(); i++) {
+                                try {
+                                    JSONObject object = MapsActivity.jsonArray.getJSONObject(i);
+                                    latitude = object.getDouble("latitude");
+                                    longitude = object.getDouble("longitude");
+                                    name = object.getString("name");
+                                    MapsActivity.tollBooths.add(new TollBooth(new LatLng(latitude, longitude), name));
+                                    HomeActivity.results = new float[MapsActivity.tollBooths.size()];
+                                } catch (JSONException e) {
+                                    Toast.makeText(LoadingActivity.this, "Internet connection not found", Toast.LENGTH_SHORT).show();
+                                    e.printStackTrace();
+                                }
                             }
+                            startActivity(new Intent(LoadingActivity.this, MapsActivity.class));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
                         }
-                        HomeActivity.results = new float[HomeActivity.tollBooths.size()];
-                        startActivity(new Intent(LoadingActivity.this,MapsActivity.class));
-                    } catch (JSONException e) {
-                        e.printStackTrace();
                     }
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    error.printStackTrace();
-                }
-            });
-            requestQueue = Volley.newRequestQueue(LoadingActivity.this);
-            requestQueue.add(request);
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                    }
+                });
+                requestQueue = Volley.newRequestQueue(LoadingActivity.this);
+                requestQueue.add(request);
         }
         if(i == 1) {
             Retrofit retrofit = new Retrofit.Builder().baseUrl("http://ec2-18-224-227-221.us-east-2.compute.amazonaws.com")

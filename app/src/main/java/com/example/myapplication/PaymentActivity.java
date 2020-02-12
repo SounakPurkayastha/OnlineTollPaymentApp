@@ -150,12 +150,8 @@ public class PaymentActivity extends AppCompatActivity {
                 }
             }
             if (status.equals("success")) {
-                //Code to handle successful transaction here.
                 Toast.makeText(PaymentActivity.this, "Transaction successful.", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(PaymentActivity.this,LoadingActivity.class).putExtra("Activity",1));
-                //paymentComplete = true;
-                //getQRCode();
-                //sharedPreferences.edit().putBoolean("paymentComplete",true).apply();
             }
             else if("Payment cancelled by user.".equals(paymentCancel)) {
                 Toast.makeText(PaymentActivity.this, "Payment cancelled by user.", Toast.LENGTH_SHORT).show();

@@ -15,6 +15,8 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.widget.Toast;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -27,16 +29,20 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.treebo.internetavailabilitychecker.InternetAvailabilityChecker;
 import com.treebo.internetavailabilitychecker.InternetConnectivityListener;
+
+import org.json.JSONArray;
+
+import java.util.ArrayList;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
     LocationManager locationManager;
     LocationListener locationListener;
-    //LatLng[] tollBooths = {new LatLng(22.935130, 69.802574)};
-    //float[] results = new float[tollBooths.length];
     static boolean notificationShown = false;
     FusedLocationProviderClient fusedLocationProviderClient;
     Location currentLocation;
@@ -44,7 +50,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static float zoom;
     private static boolean mapSet = false;
     SharedPreferences sharedPreferences;
-    InternetAvailabilityChecker mInternetAvailabilityChecker;
+    static ArrayList<TollBooth> tollBooths;
+    static JSONArray jsonArray;
+
 
     final NotificationCompat.Builder builder = new NotificationCompat.Builder(MapsActivity.this)
             .setSmallIcon(R.mipmap.ic_launcher)
@@ -79,7 +87,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mInternetAvailabilityChecker.addInternetConnectivityListener(this);*/
     }
 
-
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -90,12 +97,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onLocationChanged(Location location) {
                 LatLng userLocation = new LatLng(location.getLatitude(), location.getLongitude());
                 mMap.animateCamera(CameraUpdateFactory.newLatLng(userLocation));
-                for (TollBooth tollBooth : HomeActivity.tollBooths) {
-                    Location.distanceBetween(tollBooth.getLatLng().latitude, tollBooth.getLatLng().longitude, userLocation.latitude, userLocation.longitude, HomeActivity.results);
-                    if (HomeActivity.results[0] < 10000 && !notificationShown && !sharedPreferences.getBoolean("paymentComplete",false)) {
-                        MapsActivity.this.notify(builder);
-                        HomeActivity.nearestTollBooth = tollBooth;
-                        HomeActivity.notificationShown = true;
+                if(HomeActivity.tollBooths.size() != 0) {
+                    for (TollBooth tollBooth : HomeActivity.tollBooths) {
+                        Location.distanceBetween(tollBooth.getLatLng().latitude, tollBooth.getLatLng().longitude, userLocation.latitude, userLocation.longitude, HomeActivity.results);
+                        if (HomeActivity.results[0] < 10000 && !notificationShown && !sharedPreferences.getBoolean("paymentComplete", false)) {
+                            MapsActivity.this.notify(builder);
+                            HomeActivity.nearestTollBooth = tollBooth;
+                            HomeActivity.notificationShown = true;
+                        }
                     }
                 }
             }
@@ -127,8 +136,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             fetchLastLocation();
         }
 
-        for(TollBooth tollBooth : HomeActivity.tollBooths) {
-            mMap.addMarker(new MarkerOptions().position(tollBooth.getLatLng()).title(tollBooth.getName()));
+        if(HomeActivity.tollBooths.size() != 0){
+            for(TollBooth tollBooth : MapsActivity.tollBooths) {
+                mMap.addMarker(new MarkerOptions().position(tollBooth.getLatLng()).title(tollBooth.getName()));
+            }
         }
 
     }
@@ -142,7 +153,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     currentLocation = location;
                     mMap.setMyLocationEnabled(true);
                     LatLng latLng = new LatLng(currentLocation.getLatitude(),currentLocation.getLongitude());
-                    //mMap.addMarker(new MarkerOptions().position(latLng).title("You are here"));
                     if(!mapSet)
                         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,16));
                     else
