@@ -1,7 +1,14 @@
 var express = require("express"),
     app = express(),
     mongoose = require("mongoose"),
+    admin = require("firebase-admin"),
+    serviceAccount = require("G:/OnlineTollPaymentApp/onlinetollpaymentapp-bf63a-firebase-adminsdk-2pxp2-b8762aab57.json"),
     bodyParser = require("body-parser");
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: "https://onlinetollpaymentapp-bf63a.firebaseio.com"
+})
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended : true}));
@@ -45,6 +52,21 @@ app.get("/find/:id", function(req, res) {
         }
     });
 });
+
+app.get("/response/:token", function(req, res) {
+    var payload = {
+        notification: {
+            title:"Notification",
+            body:"Asshole"
+        }
+    }
+    admin.messaging().sendToDevice(req.params.token,payload).then(function(response){
+        console.log('Successfully sent message',response);
+        res.redirect('/');
+    }).catch(function(error) {
+        res.send(error);
+    })
+})
 
 function makeCode() {
     var result           = '';

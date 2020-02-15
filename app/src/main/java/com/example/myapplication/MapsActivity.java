@@ -10,6 +10,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -18,9 +19,19 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
+
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -45,7 +56,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LocationListener locationListener;
     static boolean notificationShown = false;
     FusedLocationProviderClient fusedLocationProviderClient;
-    Location currentLocation;
+    static Location currentLocation;
     boolean permissionAsked = false;
     private static float zoom;
     private static boolean mapSet = false;
@@ -90,6 +101,53 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        LocationManager service = (LocationManager) getSystemService(LOCATION_SERVICE);
+        if(!service.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            if(currentLocation != null) {
+                LatLng latLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
+            }
+            //Dialog dialog = new Dialog();
+            //dialog.show(getSupportFragmentManager(),"location");
+            GoogleApiClient googleApiClient = new GoogleApiClient.Builder(getApplicationContext())
+                    .addApi(LocationServices.API).build();
+            googleApiClient.connect();
+
+            LocationRequest locationRequest = LocationRequest.create();
+            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+            locationRequest.setInterval(10000);
+            locationRequest.setFastestInterval(10000 / 2);
+
+            LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
+            builder.setAlwaysShow(true);
+
+            PendingResult<LocationSettingsResult> result = LocationServices.SettingsApi.checkLocationSettings(googleApiClient, builder.build());
+            result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+                @Override
+                public void onResult(LocationSettingsResult result) {
+                    final Status status = result.getStatus();
+                    switch (status.getStatusCode()) {
+                        case LocationSettingsStatusCodes.SUCCESS:
+                            Log.i("fdfdfg", "All location settings are satisfied.");
+                            break;
+                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                            Log.i("fdfdfg", "Location settings are not satisfied. Show the user a dialog to upgrade location settings ");
+
+                            try {
+                                // Show the dialog by calling startResolutionForResult(), and check the result
+                                // in onActivityResult().
+                                status.startResolutionForResult(MapsActivity.this, 0x1);
+                            } catch (IntentSender.SendIntentException e) {
+                                Log.i("fdfdfg", "PendingIntent unable to execute request.");
+                            }
+                            break;
+                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                            Log.i("fdfdfg", "Location settings are inadequate, and cannot be fixed here. Dialog not created.");
+                            break;
+                    }
+                }
+            });
+        }
         locationManager = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
 
         locationListener = new LocationListener() {
@@ -97,6 +155,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onLocationChanged(Location location) {
                 LatLng userLocation = new LatLng(location.getLatitude(), location.getLongitude());
                 mMap.animateCamera(CameraUpdateFactory.newLatLng(userLocation));
+                currentLocation = location;
                 if(HomeActivity.tollBooths.size() != 0) {
                     for (TollBooth tollBooth : HomeActivity.tollBooths) {
                         Location.distanceBetween(tollBooth.getLatLng().latitude, tollBooth.getLatLng().longitude, userLocation.latitude, userLocation.longitude, HomeActivity.results);
@@ -121,7 +180,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public void onProviderDisabled(String s) {
-                Toast.makeText(MapsActivity.this, "Please enable Location", Toast.LENGTH_SHORT).show();
+
             }
         };
 
@@ -153,10 +212,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     currentLocation = location;
                     mMap.setMyLocationEnabled(true);
                     LatLng latLng = new LatLng(currentLocation.getLatitude(),currentLocation.getLongitude());
-                    if(!mapSet)
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,16));
-                    else
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,zoom));
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,16));
+                    //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,zoom));
                 }
                 if(location == null)
                     fetchLastLocation();
@@ -179,6 +236,5 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         notificationManager.notify(0,builder.build());
         notificationShown = true;
     }
-
 
 }

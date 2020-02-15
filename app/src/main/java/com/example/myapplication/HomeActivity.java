@@ -41,6 +41,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.treebo.internetavailabilitychecker.InternetAvailabilityChecker;
 import com.treebo.internetavailabilitychecker.InternetConnectivityListener;
 
@@ -68,10 +69,12 @@ public class HomeActivity extends AppCompatActivity implements InternetConnectiv
                                                               R.mipmap.ic_launcher,
                                                               R.mipmap.ic_launcher,
                                                               R.mipmap.ic_launcher));
+    static String token;
     ListView listView;
+    float dist;
     static ArrayList<Model> vehicles;
-    JsonObjectRequest request;
-    RequestQueue requestQueue;
+    static JsonObjectRequest request;
+    static RequestQueue requestQueue;
     static JSONArray jsonArray;
     static DatabaseReference reference2;
     long backPressedTime;
@@ -114,6 +117,8 @@ public class HomeActivity extends AppCompatActivity implements InternetConnectiv
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        token = FirebaseInstanceId.getInstance().getToken();
+        //Log.i("Token:",token);
         if(Flag.firstLoad) {
             //Toast.makeText(HomeActivity.this,"First load",Toast.LENGTH_SHORT).show();
             Flag.firstLoad = false;
@@ -179,17 +184,10 @@ public class HomeActivity extends AppCompatActivity implements InternetConnectiv
                         Toast.makeText(HomeActivity.this, "Payment History", Toast.LENGTH_SHORT).show();
                 }
                 if (i == 2) {
-                    LocationManager service = (LocationManager) getSystemService(LOCATION_SERVICE);
-                    if (!service.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                        Toast.makeText(HomeActivity.this, "Please enable Location", Toast.LENGTH_SHORT).show();
-                    }
-                    else {
-                        if(!checkConnection()) {
-                            startActivity(new Intent(HomeActivity.this, MapsActivity.class));
-                        }
-                        else
-                            startActivity(new Intent(HomeActivity.this, LoadingActivity.class).putExtra("Activity",2));
-                    }
+                    if(!checkConnection())
+                        startActivity(new Intent(HomeActivity.this, MapsActivity.class));
+                    else
+                        startActivity(new Intent(HomeActivity.this, LoadingActivity.class).putExtra("Activity",2));
                 }
                 if (i == 3) {
                     startActivity(new Intent(HomeActivity.this, LoadingActivity.class).putExtra("Activity",3));
@@ -205,13 +203,11 @@ public class HomeActivity extends AppCompatActivity implements InternetConnectiv
             }
 
         });
-
         final NotificationCompat.Builder builder = new NotificationCompat.Builder(HomeActivity.this)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle("Toll Booth Ahead")
                 .setContentText("Please pay the toll")
                 .setAutoCancel(true);
-
         locationManager = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
         locationListener = new LocationListener() {
             @Override
@@ -224,6 +220,7 @@ public class HomeActivity extends AppCompatActivity implements InternetConnectiv
                         nearestTollBooth = tollBooth;
                         notificationShown = true;
                     }
+                    //dist = results[0];
                 }
             }
 
@@ -242,7 +239,6 @@ public class HomeActivity extends AppCompatActivity implements InternetConnectiv
 
             }
         };
-
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION},1);
         }
@@ -281,6 +277,7 @@ public class HomeActivity extends AppCompatActivity implements InternetConnectiv
 
     @Override
     public void onInternetConnectivityChanged(boolean isConnected) {
+        //Log.i("Activity:",this.getClass().getSimpleName());
         if(isConnected && !tollBoothsLoaded){
             tollBoothsLoaded = true;
             requestQueue.add(request);
