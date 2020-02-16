@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -19,6 +20,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.gson.JsonArray;
 import com.treebo.internetavailabilitychecker.InternetAvailabilityChecker;
 import com.treebo.internetavailabilitychecker.InternetConnectivityListener;
@@ -26,6 +28,7 @@ import com.treebo.internetavailabilitychecker.InternetConnectivityListener;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.URLEncoder;
 import java.util.ArrayList;
 
 import retrofit2.Call;
@@ -159,7 +162,7 @@ public class LoadingActivity extends AppCompatActivity implements InternetConnec
     }
 
     private void getQRCode() {
-        Call<Post> call = jsonPlaceHolderApi.getQRCode(ChooseVehicleActivity.vehicleId);
+        Call<Post> call = jsonPlaceHolderApi.getQRCode(URLEncoder.encode(HomeActivity.token));
         call.enqueue(new Callback<Post>() {
             @Override
             public void onResponse(Call<Post> call, retrofit2.Response<Post> response) {
@@ -173,7 +176,7 @@ public class LoadingActivity extends AppCompatActivity implements InternetConnec
 
             @Override
             public void onFailure(Call<Post> call, Throwable t) {
-
+                Log.i("qrcode:",t.getMessage());
             }
         });
     }

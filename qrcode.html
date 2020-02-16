@@ -15,21 +15,29 @@
     <video id="preview" height="500" width="1000"></video>
     <script>
         var code;
+        var token;
+        var qrcode;
         let scanner = new Instascan.Scanner(
             {
                 video: document.getElementById('preview')
             }
         );
-        var vehicleId = "WB231536";
+        //var userToken = 'dT2ToEgwk4A:APA91bFvT37UjHQ7zAUoZh5M_hI7ZdogCkQVEjkeSbQG5mt280SusYgvbAHAT0RfYg7C2FsF7KX5hUQVtSLWEgieYVgZ5AW0lrpvikQEa_VziLw8Z7nokPhUY9fl6RFXFPXK__WSHN7i';
+        //var vehicleId = "WB231536";
         scanner.addListener('scan', function(content) {
-            fetch('http://ec2-18-224-227-221.us-east-2.compute.amazonaws.com/find/' + vehicleId).then(response => {
+            //token = content.slice(-10);
+            //console.log(content);
+            fetch('http://ec2-18-224-227-221.us-east-2.compute.amazonaws.com/find/' + content).then(response => {
                 return response.json();
             }).then(responseData => {
-                code = responseData.qrcode;
-                if(code === content)
+                response = responseData.token;
+                //console.log(responseData);
+                //if(response === token){
                     alert('QR code verified');
-                else
-                    alert('Wrong QR code');
+                    fetch('http://ec2-18-224-227-221.us-east-2.compute.amazonaws.com/response/' + response);
+                //}
+                //else
+                //    alert('Wrong QR code');
             });
         });
         Instascan.Camera.getCameras().then(cameras => 

@@ -49,8 +49,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class HomeActivity extends AppCompatActivity implements InternetConnectivityListener {
 
@@ -93,6 +99,7 @@ public class HomeActivity extends AppCompatActivity implements InternetConnectiv
     static DatabaseReference reference;
     LVAdapter adapter;
     static String qrcode;
+    JsonPlaceHolderApi jsonPlaceHolderApi;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -249,7 +256,36 @@ public class HomeActivity extends AppCompatActivity implements InternetConnectiv
             fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(HomeActivity.this);
         }
 
+        /*Retrofit retrofit = new Retrofit.Builder().baseUrl("http://ec2-18-224-227-221.us-east-2.compute.amazonaws.com")
+                .addConverterFactory(GsonConverterFactory.create()).build();
+        jsonPlaceHolderApi = retrofit.create(JsonPlaceHolderApi.class);
+        reference = FirebaseDatabase.getInstance().getReference().child(HomeActivity.userId).child("QRCode");
+        getQRCode();*/
+
     }
+
+    /*private void getQRCode() {
+        Call<Post> call = jsonPlaceHolderApi.getQRCode(URLEncoder.encode(HomeActivity.token));
+        call.enqueue(new Callback<Post>() {
+            @Override
+            public void onResponse(Call<Post> call, retrofit2.Response<Post> response) {
+                if(!response.isSuccessful()) {
+                    return;
+                }
+                //Log.i("qrcode:","ok1");
+                HomeActivity.qrcode = response.body().getQrCode();
+                //Log.i("qrcode:","ok2");
+                reference.child(reference.push().getKey()).setValue(HomeActivity.qrcode);
+                //Log.i("qrcode:","ok3");
+                startActivity(new Intent(HomeActivity.this,ResponseActivity.class));
+            }
+
+            @Override
+            public void onFailure(Call<Post> call, Throwable t) {
+                Log.i("qrcode:",t.getMessage());
+            }
+        });
+    }*/
 
     @Override
     public void onBackPressed() {

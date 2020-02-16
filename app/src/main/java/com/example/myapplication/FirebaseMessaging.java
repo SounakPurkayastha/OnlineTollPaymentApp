@@ -27,6 +27,7 @@ public class FirebaseMessaging extends FirebaseMessagingService {
         //Log.i("Notification:","From " + remoteMessage.getFrom());
         if(remoteMessage.getNotification() != null) {
             FirebaseMessaging.this.notify(builder);
+            startActivity(new Intent(getApplicationContext(),CompleteActivity.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
             //Log.i("Notification:","Title:" + remoteMessage.getNotification().getTitle());
             //Log.i("Notification:","Message:" + remoteMessage.getNotification().getBody());
         }
