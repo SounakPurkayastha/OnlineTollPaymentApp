@@ -47,8 +47,9 @@ public class NewVehicleActivity extends AppCompatActivity implements AdapterView
                 else if(vehicleType.equals("Vehicle Class"))
                     Toast.makeText(NewVehicleActivity.this,"Select vehicle class",Toast.LENGTH_SHORT).show();
                 else {
-                    Model data = new Model(vehicleId,vehicleType);
-                    database.child(database.push().getKey()).setValue(data);
+                    String key = database.push().getKey();
+                    Model data = new Model(vehicleId,vehicleType,key);
+                    database.child(key).setValue(data);
                     Toast.makeText(NewVehicleActivity.this,"Data inserted successfully",Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(NewVehicleActivity.this, RegisteredVehiclesActivity.class);
                     startActivity(intent);

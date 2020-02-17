@@ -148,6 +148,10 @@ public class LoadingActivity extends AppCompatActivity implements InternetConnec
                 }
             });
         }
+        if(i == 6) {
+            HomeActivity.reference.removeValue();
+            startActivity(new Intent(LoadingActivity.this,CompleteActivity.class));
+        }
     }
 
     @Override

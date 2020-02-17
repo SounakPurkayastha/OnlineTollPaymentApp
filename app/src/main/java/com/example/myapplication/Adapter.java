@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -15,6 +16,7 @@ public class Adapter extends RecyclerView.Adapter<Holder> {
     Context c;
     ArrayList<Model> vehicleData;
 
+
     public Adapter(Context c, ArrayList<Model> arrayList) {
         this.c = c;
         this.vehicleData = arrayList;
@@ -24,7 +26,7 @@ public class Adapter extends RecyclerView.Adapter<Holder> {
     @Override
     public Holder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.recycler_row,null);
-        return new Holder(view);
+        return new Holder(view,Holder.listener);
     }
 
     @Override

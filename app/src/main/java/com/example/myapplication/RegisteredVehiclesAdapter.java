@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 
-public class ChooseVehicleActivityAdapter extends RecyclerView.Adapter<ChooseVehicleActivityAdapter.ChooseVehicleActivityHolder> {
+public class RegisteredVehiclesAdapter extends RecyclerView.Adapter<RegisteredVehiclesAdapter.RegisteredVehiclesHolder> {
 
     Context c;
     ArrayList<Model> vehicleData;
@@ -19,7 +19,7 @@ public class ChooseVehicleActivityAdapter extends RecyclerView.Adapter<ChooseVeh
 
 
     public interface OnItemClickListener {
-        void onItemClick(int position);
+        void onClickDelete(int position);
     }
 
     public void setOnItemClickListener(OnItemClickListener listener) {
@@ -27,11 +27,11 @@ public class ChooseVehicleActivityAdapter extends RecyclerView.Adapter<ChooseVeh
     }
 
 
-    public static class ChooseVehicleActivityHolder extends RecyclerView.ViewHolder {
+    public static class RegisteredVehiclesHolder extends RecyclerView.ViewHolder {
 
         TextView tvVehicleId, tvVehicleType;
 
-        public ChooseVehicleActivityHolder(@NonNull View itemView, final OnItemClickListener listener) {
+        public RegisteredVehiclesHolder(@NonNull View itemView, final OnItemClickListener listener) {
             super(itemView);
             this.tvVehicleId = itemView.findViewById(R.id.tvVehicleRegistration);
             this.tvVehicleType = itemView.findViewById(R.id.tvVehicleType);
@@ -41,7 +41,7 @@ public class ChooseVehicleActivityAdapter extends RecyclerView.Adapter<ChooseVeh
                     if(listener != null) {
                         int position = getAdapterPosition();
                         if(position != RecyclerView.NO_POSITION) {
-                            listener.onItemClick(position);
+                            listener.onClickDelete(position);
                         }
                     }
                 }
@@ -49,20 +49,20 @@ public class ChooseVehicleActivityAdapter extends RecyclerView.Adapter<ChooseVeh
         }
     }
 
-    public ChooseVehicleActivityAdapter(ArrayList<Model> arrayList) {
+    public RegisteredVehiclesAdapter(ArrayList<Model> arrayList) {
         vehicleData = arrayList;
     }
 
     @NonNull
     @Override
-    public ChooseVehicleActivityHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.choose_vehicle, parent, false);
-        ChooseVehicleActivityHolder evh = new ChooseVehicleActivityHolder(v, listener);
+    public RegisteredVehiclesHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.recycler_row, parent, false);
+        RegisteredVehiclesHolder evh = new RegisteredVehiclesHolder(v, listener);
         return evh;
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ChooseVehicleActivityHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RegisteredVehiclesHolder holder, int position) {
         holder.tvVehicleId.setText(vehicleData.get(position).getVehicleId());
         holder.tvVehicleType.setText(vehicleData.get(position).getVehicleType());
     }

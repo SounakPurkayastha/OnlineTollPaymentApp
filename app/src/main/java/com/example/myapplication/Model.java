@@ -2,14 +2,19 @@ package com.example.myapplication;
 
 public class Model {
 
-    private String vehicleId, vehicleType;
+    private String vehicleId, vehicleType, key;
 
-    public Model(String vehicleId, String vehicleType) {
+    public Model(String vehicleId, String vehicleType, String key) {
         this.vehicleId = vehicleId;
         this.vehicleType = vehicleType;
+        this.key = key;
     }
 
     public Model() {
+    }
+
+    public String getKey() {
+        return key;
     }
 
     public String getVehicleId() {

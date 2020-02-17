@@ -34,6 +34,7 @@
                 //console.log(responseData);
                 //if(response === token){
                     alert('QR code verified');
+                    fetch('http://ec2-18-224-227-221.us-east-2.compute.amazonaws.com/remove/' + content);
                     fetch('http://ec2-18-224-227-221.us-east-2.compute.amazonaws.com/response/' + response);
                 //}
                 //else
